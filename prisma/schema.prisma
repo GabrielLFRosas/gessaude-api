@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model doctor_place {
+  id       Int     @id @default(autoincrement())
+  doctorId Int
+  placeId  Int
+  doctors  doctors @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctorIDFK")
+  places   places  @relation(fields: [placeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "placeDoctorFK")
+
+  @@index([placeId], map: "placeDoctorFK_idx")
+  @@index([doctorId], map: "doctorIDFK")
+  @@map("doctor-place")
+}
+
+model doctors {
+  id           Int            @id @default(autoincrement())
+  userCPF      String         @db.VarChar(11)
+  doctor_place doctor_place[]
+  users        users          @relation(fields: [userCPF], references: [cpf], onDelete: NoAction, onUpdate: NoAction, map: "userDoctorFK")
+  services     services[]
+
+  @@index([userCPF], map: "userCPFFK_idx")
+}
+
+model patients {
+  cpf        String     @id @unique(map: "cpf_UNIQUE") @db.VarChar(11)
+  name       String     @db.VarChar(255)
+  email      String     @db.VarChar(255)
+  phone      String?    @db.VarChar(11)
+  whatsapp   String     @db.VarChar(11)
+  birthdate  String     @db.VarChar(20)
+  cep        String     @db.VarChar(45)
+  address    String     @db.VarChar(255)
+  number     String     @db.VarChar(45)
+  complement String?    @db.VarChar(45)
+  district   String     @db.VarChar(255)
+  city       String     @db.VarChar(255)
+  state      String     @db.VarChar(45)
+  createdAt  DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt  DateTime   @default(now()) @db.Timestamp(0)
+  services   services[]
+}
+
+model places {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar(255)
+  createdAt           DateTime              @default(now()) @db.Timestamp(0)
+  updatedAt           DateTime              @default(now()) @db.Timestamp(0)
+  doctor_place        doctor_place[]
+  services            services[]
+  user_place_position user_place_position[]
+}
+
+model positions {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar(255)
+  description         String                @db.VarChar(255)
+  createdAt           DateTime              @default(now()) @db.Timestamp(0)
+  updatedAt           DateTime              @default(now()) @db.Timestamp(0)
+  user_place_position user_place_position[]
+}
+
+model services {
+  id          Int      @id @default(autoincrement())
+  placeId     Int
+  patientCPF  String   @db.VarChar(11)
+  doctorId    Int?
+  serviceDate String   @db.VarChar(100)
+  status      Int      @default(0)
+  createdAt   DateTime @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @db.Timestamp(0)
+  exams       exams[]
+  doctors     doctors? @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "doctorServiceFK")
+  patients    patients @relation(fields: [patientCPF], references: [cpf], onDelete: NoAction, onUpdate: NoAction, map: "patientServiceFK")
+  places      places   @relation(fields: [placeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "placeServiceFK")
+
+  @@index([doctorId], map: "doctorServiceFK_idx")
+  @@index([patientCPF], map: "patientServiceFK_idx")
+  @@index([placeId], map: "placeServiceFK_idx")
+}
+
+model user_place_position {
+  id         Int       @id @unique(map: "id_UNIQUE") @default(autoincrement())
+  userCPF    String    @db.VarChar(11)
+  placeId    Int
+  positionId Int
+  places     places    @relation(fields: [placeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "placeIdFK")
+  positions  positions @relation(fields: [positionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "positionIdFK")
+  users      users     @relation(fields: [userCPF], references: [cpf], onDelete: NoAction, onUpdate: NoAction, map: "userCPFFK")
+
+  @@index([placeId], map: "placeIdFK_idx")
+  @@index([positionId], map: "positionIdFK_idx")
+  @@index([userCPF], map: "userCPFFK")
+  @@map("user-place-position")
+}
+
+model users {
+  cpf                 String                @id @unique(map: "cpf_UNIQUE") @db.VarChar(11)
+  name                String                @db.VarChar(255)
+  email               String                @db.VarChar(255)
+  phone               String                @db.VarChar(11)
+  birthdate           String                @db.VarChar(20)
+  password            String                @db.VarChar(255)
+  cep                 String                @db.VarChar(255)
+  address             String                @db.VarChar(255)
+  number              String                @db.VarChar(45)
+  complement          String?               @db.VarChar(45)
+  district            String                @db.VarChar(45)
+  city                String                @db.VarChar(255)
+  state               String                @db.VarChar(45)
+  createdAt           DateTime              @default(now()) @db.Timestamp(0)
+  updatedAt           DateTime              @default(now()) @db.Timestamp(0)
+  doctors             doctors[]
+  user_place_position user_place_position[]
+}
+
+model exams {
+  id           Int         @id @default(autoincrement())
+  serviceId    Int
+  examTypeId   Int
+  specialtyId  Int
+  scheduleDate String      @db.VarChar(45)
+  status       Int
+  createdAt    DateTime    @default(now()) @db.Timestamp(0)
+  updatedAt    DateTime    @default(now()) @db.Timestamp(0)
+  typeExams    typeExams   @relation(fields: [examTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_examType")
+  services     services    @relation(fields: [serviceId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_serviceExam")
+  specialties  specialties @relation(fields: [specialtyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_specialtyExam")
+
+  @@index([examTypeId], map: "fk_examType_idx")
+  @@index([serviceId], map: "fk_serviceExam_idx")
+  @@index([specialtyId], map: "fk_specialtyExam_idx")
+}
+
+model specialties {
+  id    Int     @id @default(autoincrement())
+  name  String  @db.VarChar(255)
+  exams exams[]
+}
+
+model typeExams {
+  id          Int     @id @default(autoincrement())
+  description String  @db.VarChar(255)
+  exams       exams[]
+}

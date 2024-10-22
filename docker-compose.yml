@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8
+    container_name: gessaude_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: gessaude
+      MYSQL_USER: gessaude
+      MYSQL_PASSWORD: gessaude
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: gessaude_api
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://gessaude:gessaude@db:3306/gessaude
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  mysql_data:
