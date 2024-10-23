@@ -52,7 +52,6 @@ export class DoctorPlaceService {
     doctorPlaces.forEach((doctorPlace: any) => {
       const doctorId = doctorPlace.doctors.id;
 
-      // Verifica se o médico já existe no mapa
       if (!responseMap.has(doctorId)) {
         responseMap.set(doctorId, {
           id: doctorId,
@@ -61,11 +60,9 @@ export class DoctorPlaceService {
         });
       }
 
-      // Adiciona o local ao médico correspondente
       responseMap.get(doctorId).places.push(doctorPlace.places);
     });
 
-    // Converte o mapa de volta para um array
     const response = Array.from(responseMap.values());
 
     return response;
